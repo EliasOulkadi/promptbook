@@ -17,9 +17,6 @@ jobs:
         with:
           node-version: 22
       - run: npm install
-      - run: npm run dist
-      - uses: softprops/action-gh-release@v2
-        with:
-          files: dist/*.exe
+      - run: npm run dist -- -p always
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
