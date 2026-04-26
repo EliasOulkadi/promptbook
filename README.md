@@ -23,9 +23,12 @@ Stop losing your best AI prompts across chat windows, Notion pages, and sticky n
 
 ---
 
-## Install
+## Requirements
 
-**Requirements:** [Node.js 18+](https://nodejs.org) and npm.
+- **[Node.js 18+](https://nodejs.org)** — download and install it first if you don't have it (`node -v` to check)
+- npm (comes with Node.js)
+
+## Install
 
 ```bash
 git clone https://github.com/EliasOulkadi/promptbook.git
