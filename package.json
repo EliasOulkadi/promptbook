@@ -4,7 +4,8 @@
   "description": "Local AI prompt manager — save, search, and copy your prompts from a clean desktop app",
   "main": "main.js",
   "scripts": {
-    "start": "electron ."
+    "start": "electron .",
+    "dist": "electron-builder"
   },
   "keywords": [
     "ai",
@@ -26,7 +27,27 @@
   "bugs": {
     "url": "https://github.com/EliasOulkadi/promptbook/issues"
   },
+  "build": {
+    "appId": "com.eliasoulkadi.promptbook",
+    "productName": "Promptbook",
+    "files": [
+      "main.js",
+      "preload.js",
+      "src/**/*",
+      "package.json"
+    ],
+    "win": {
+      "target": [{ "target": "nsis", "arch": ["x64"] }]
+    },
+    "mac": {
+      "target": [{ "target": "dmg", "arch": ["x64", "arm64"] }]
+    },
+    "linux": {
+      "target": ["AppImage"]
+    }
+  },
   "devDependencies": {
-    "electron": "^33.0.0"
+    "electron": "^33.0.0",
+    "electron-builder": "^25.0.0"
   }
 }

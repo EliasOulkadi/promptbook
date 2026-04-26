@@ -306,6 +306,17 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:14
 
 .m-foot{display:flex;justify-content:flex-end;gap:6px;padding:12px 18px 14px;border-top:1px solid var(--border-soft)}
 
+/* ── WINDOW CONTROLS ── */
+#wc{display:none;align-self:stretch;margin-left:6px;-webkit-app-region:no-drag}
+.wc-btn{
+  width:46px;height:100%;border:none;background:transparent;
+  color:var(--text-3);cursor:default;
+  display:flex;align-items:center;justify-content:center;
+  transition:background .1s,color .1s;flex-shrink:0;
+}
+.wc-btn:hover{background:var(--surface-2);color:var(--text)}
+.wc-close:hover{background:#e81123;color:#fff}
+
 /* ── TOAST ── */
 .toast{
   position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(4px);
@@ -368,6 +379,17 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:14
       <button class="btn btn-solid" onclick="openModal()">
         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M12 5v14M5 12h14"/></svg>
         New prompt
+      </button>
+    </div>
+    <div id="wc">
+      <button class="wc-btn" id="wc-min" onclick="window.pb.minimize()">
+        <svg width="10" height="1" viewBox="0 0 10 1"><rect width="10" height="1.5" fill="currentColor"/></svg>
+      </button>
+      <button class="wc-btn" id="wc-max" onclick="window.pb.maximize()">
+        <svg id="wc-max-ic" width="10" height="10" viewBox="0 0 10 10"><rect x=".6" y=".6" width="8.8" height="8.8" rx="0" fill="none" stroke="currentColor" stroke-width="1.2"/></svg>
+      </button>
+      <button class="wc-btn wc-close" onclick="window.pb.close()">
+        <svg width="10" height="10" viewBox="0 0 10 10"><line x1="0" y1="0" x2="10" y2="10" stroke="currentColor" stroke-width="1.4"/><line x1="10" y1="0" x2="0" y2="10" stroke="currentColor" stroke-width="1.4"/></svg>
       </button>
     </div>
   </div>
@@ -647,6 +669,15 @@ document.addEventListener('keydown',e=>{
   if((e.ctrlKey||e.metaKey)&&e.key==='k'){e.preventDefault();document.getElementById('srch').focus()}
   if((e.ctrlKey||e.metaKey)&&e.key==='n'){e.preventDefault();openModal()}
 })
+
+if (window.pb.platform !== 'darwin') {
+  document.getElementById('wc').style.display = 'flex'
+  window.pb.onMaximize(isMax => {
+    document.getElementById('wc-max-ic').innerHTML = isMax
+      ? '<path d="M2 0H10V8M0 2H8V10H0Z" fill="none" stroke="currentColor" stroke-width="1.2"/>'
+      : '<rect x=".6" y=".6" width="8.8" height="8.8" rx="0" fill="none" stroke="currentColor" stroke-width="1.2"/>'
+  })
+}
 
 load()
 </script>

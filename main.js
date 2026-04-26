@@ -7,14 +7,18 @@ Menu.setApplicationMenu(null)
 let mainWindow
 
 function createWindow() {
+  const isWin = process.platform !== 'darwin'
+
   mainWindow = new BrowserWindow({
     width: 1140,
     height: 740,
     minWidth: 820,
     minHeight: 560,
-    backgroundColor: '#F7F7F8',
-    titleBarStyle: process.platform === 'darwin' ? 'hiddenInset' : 'default',
-    trafficLightPosition: { x: 16, y: 18 },
+    backgroundColor: '#191919',
+    ...(isWin
+      ? { frame: false }
+      : { titleBarStyle: 'hiddenInset', trafficLightPosition: { x: 16, y: 18 } }
+    ),
     webPreferences: {
       preload: join(__dirname, 'preload.js'),
       contextIsolation: true,
@@ -27,6 +31,9 @@ function createWindow() {
   mainWindow.once('ready-to-show', () => mainWindow.show())
   mainWindow.loadFile(join(__dirname, 'src', 'ui.html'))
 
+  mainWindow.on('maximize',   () => mainWindow.webContents.send('win-maximized', true))
+  mainWindow.on('unmaximize', () => mainWindow.webContents.send('win-maximized', false))
+
   ipcMain.handle('get-prompts',    ()        => store.getAll())
   ipcMain.handle('get-tags',       ()        => store.getAllTags())
   ipcMain.handle('create-prompt',  (_, d)    => store.create(d))
@@ -38,6 +45,12 @@ function createWindow() {
     nativeTheme.themeSource = dark ? 'dark' : 'light'
     if (mainWindow) mainWindow.setBackgroundColor(dark ? '#0F0F10' : '#F7F7F8')
   })
+  ipcMain.handle('win-minimize', () => mainWindow.minimize())
+  ipcMain.handle('win-maximize', () => {
+    if (mainWindow.isMaximized()) mainWindow.unmaximize()
+    else mainWindow.maximize()
+  })
+  ipcMain.handle('win-close', () => mainWindow.close())
 }
 
 app.whenReady().then(createWindow)

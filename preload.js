@@ -9,4 +9,9 @@ contextBridge.exposeInMainWorld('pb', {
   incrementUses: (id)      => ipcRenderer.invoke('increment-uses', id),
   copyText:      (text)    => ipcRenderer.invoke('copy-text', text),
   setTheme:      (dark)    => ipcRenderer.invoke('set-theme', dark),
+  platform:      process.platform,
+  minimize:      ()        => ipcRenderer.invoke('win-minimize'),
+  maximize:      ()        => ipcRenderer.invoke('win-maximize'),
+  close:         ()        => ipcRenderer.invoke('win-close'),
+  onMaximize:    (cb)      => ipcRenderer.on('win-maximized', (_, v) => cb(v)),
 })

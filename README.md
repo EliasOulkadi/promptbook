@@ -8,6 +8,14 @@ A local desktop app to save, search, and copy AI prompts instantly.
 
 ---
 
+## Download
+
+**[⬇ Download latest release (.exe for Windows)](https://github.com/EliasOulkadi/promptbook/releases/latest)**
+
+No install required — just download and run.
+
+---
+
 ## What it does
 
 Stop losing your best AI prompts across chat windows, Notion pages, and sticky notes. Promptbook stores them locally and lets you find any prompt in seconds.
@@ -23,12 +31,9 @@ Stop losing your best AI prompts across chat windows, Notion pages, and sticky n
 
 ---
 
-## Requirements
+## Run from source
 
-- **[Node.js 18+](https://nodejs.org)** — download and install it first if you don't have it (`node -v` to check)
-- npm (comes with Node.js)
-
-## Install
+**Requirements:** [Node.js 18+](https://nodejs.org)
 
 ```bash
 git clone https://github.com/EliasOulkadi/promptbook.git
@@ -49,6 +54,19 @@ npm start
 | Edit / Delete | Open a prompt → buttons in the top-right of the panel |
 | Pin | Open a prompt → click **Pin** |
 | Filter by tag | Click any tag in the left sidebar |
+
+---
+
+## Build
+
+To package the app yourself:
+
+```bash
+npm install
+npm run dist
+```
+
+The installer will be in the `dist/` folder.
 
 ---
 
