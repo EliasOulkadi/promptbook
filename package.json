@@ -1,6 +1,6 @@
 {
   "name": "promptbook",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Local AI prompt manager — save, search, and copy your prompts from a clean desktop app",
   "main": "main.js",
   "scripts": {
@@ -37,17 +37,38 @@
       "package.json"
     ],
     "win": {
-      "target": [{ "target": "nsis", "arch": ["x64"] }]
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
     },
     "mac": {
-      "target": [{ "target": "dmg", "arch": ["x64", "arm64"] }]
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        }
+      ]
     },
     "linux": {
-      "target": ["AppImage"]
+      "target": [
+        "AppImage"
+      ]
     }
   },
   "devDependencies": {
     "electron": "^33.0.0",
     "electron-builder": "^25.0.0"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.104.1",
+    "electron-window-state": "^5.0.3"
   }
 }

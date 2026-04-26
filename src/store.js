@@ -1,10 +1,14 @@
-const { readFileSync, writeFileSync, mkdirSync, existsSync } = require('fs')
+const fs = require('fs')
+const fsPromises = fs.promises
 const { join } = require('path')
 const { homedir } = require('os')
 const { randomUUID } = require('crypto')
 
 const DATA_DIR  = join(homedir(), '.promptbook')
 const DATA_FILE = join(DATA_DIR, 'prompts.json')
+
+let memoryCache = null
+let writePromise = null
 
 const TAG_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
 function shortId() {
@@ -13,31 +17,53 @@ function shortId() {
   return s
 }
 
-function ensureDir() {
-  if (!existsSync(DATA_DIR)) mkdirSync(DATA_DIR, { recursive: true })
+function ensureDirSync() {
+  if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true })
 }
 
-function read() {
-  ensureDir()
-  if (!existsSync(DATA_FILE)) return { prompts: [] }
-  try { return JSON.parse(readFileSync(DATA_FILE, 'utf8')) } catch { return { prompts: [] } }
+function loadSync() {
+  if (memoryCache) return memoryCache
+  ensureDirSync()
+  if (!fs.existsSync(DATA_FILE)) {
+    memoryCache = { prompts: [] }
+    return memoryCache
+  }
+  try {
+    memoryCache = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'))
+  } catch {
+    memoryCache = { prompts: [] }
+  }
+  return memoryCache
 }
 
-function write(data) {
-  ensureDir()
-  writeFileSync(DATA_FILE, JSON.stringify(data, null, 2), 'utf8')
+// Ensure loaded at startup
+loadSync()
+
+async function writeAsync() {
+  ensureDirSync()
+  const dataString = JSON.stringify(memoryCache, null, 2)
+  
+  // Basic debounce / lock for writes
+  if (writePromise) {
+    await writePromise
+  }
+  
+  writePromise = fsPromises.writeFile(DATA_FILE, dataString, 'utf8').finally(() => {
+    writePromise = null
+  })
+  
+  await writePromise
 }
 
-function getAll() {
-  return read().prompts
+async function getAll() {
+  return memoryCache.prompts
 }
 
-function getById(id) {
-  return read().prompts.find(p => p.id === id) ?? null
+async function getById(id) {
+  return memoryCache.prompts.find(p => p.id === id) ?? null
 }
 
-function create({ name, text, tags = [], pinned = false }) {
-  const data = read()
+async function create({ name, text, tags = [], pinned = false }) {
   const prompt = {
     id: randomUUID(),
     shortId: shortId(),
@@ -49,42 +75,39 @@ function create({ name, text, tags = [], pinned = false }) {
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   }
-  data.prompts.unshift(prompt)
-  write(data)
+  memoryCache.prompts.unshift(prompt)
+  await writeAsync()
   return prompt
 }
 
-function update(id, fields) {
-  const data = read()
-  const idx = data.prompts.findIndex(p => p.id === id)
+async function update(id, fields) {
+  const idx = memoryCache.prompts.findIndex(p => p.id === id)
   if (idx === -1) return null
   if (fields.tags) fields.tags = [...new Set(fields.tags.map(t => t.toLowerCase().trim()).filter(Boolean))]
-  data.prompts[idx] = { ...data.prompts[idx], ...fields, id, updatedAt: new Date().toISOString() }
-  write(data)
-  return data.prompts[idx]
+  memoryCache.prompts[idx] = { ...memoryCache.prompts[idx], ...fields, id, updatedAt: new Date().toISOString() }
+  await writeAsync()
+  return memoryCache.prompts[idx]
 }
 
-function remove(id) {
-  const data = read()
-  const idx = data.prompts.findIndex(p => p.id === id)
+async function remove(id) {
+  const idx = memoryCache.prompts.findIndex(p => p.id === id)
   if (idx === -1) return false
-  data.prompts.splice(idx, 1)
-  write(data)
+  memoryCache.prompts.splice(idx, 1)
+  await writeAsync()
   return true
 }
 
-function incrementUses(id) {
-  const data = read()
-  const idx = data.prompts.findIndex(p => p.id === id)
+async function incrementUses(id) {
+  const idx = memoryCache.prompts.findIndex(p => p.id === id)
   if (idx === -1) return
-  data.prompts[idx].uses = (data.prompts[idx].uses || 0) + 1
-  data.prompts[idx].updatedAt = new Date().toISOString()
-  write(data)
+  memoryCache.prompts[idx].uses = (memoryCache.prompts[idx].uses || 0) + 1
+  memoryCache.prompts[idx].updatedAt = new Date().toISOString()
+  await writeAsync()
 }
 
-function getAllTags() {
+async function getAllTags() {
   const tags = new Set()
-  for (const p of read().prompts) for (const t of (p.tags || [])) tags.add(t)
+  for (const p of memoryCache.prompts) for (const t of (p.tags || [])) tags.add(t)
   return [...tags].sort()
 }
 

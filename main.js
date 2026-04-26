@@ -2,6 +2,8 @@ const { app, BrowserWindow, ipcMain, clipboard, Menu, nativeTheme } = require('e
 const { join } = require('path')
 const store = require('./src/store')
 
+const windowStateKeeper = require('electron-window-state')
+
 Menu.setApplicationMenu(null)
 
 let mainWindow
@@ -9,9 +11,16 @@ let mainWindow
 function createWindow() {
   const isWin = process.platform !== 'darwin'
 
+  let mainWindowState = windowStateKeeper({
+    defaultWidth: 1140,
+    defaultHeight: 740
+  })
+
   mainWindow = new BrowserWindow({
-    width: 1140,
-    height: 740,
+    x: mainWindowState.x,
+    y: mainWindowState.y,
+    width: mainWindowState.width,
+    height: mainWindowState.height,
     minWidth: 820,
     minHeight: 560,
     backgroundColor: '#191919',
@@ -23,13 +32,15 @@ function createWindow() {
       preload: join(__dirname, 'preload.js'),
       contextIsolation: true,
       nodeIntegration: false,
-      sandbox: false,
+      sandbox: true,
     },
     show: false,
   })
 
   mainWindow.once('ready-to-show', () => mainWindow.show())
-  mainWindow.loadFile(join(__dirname, 'src', 'ui.html'))
+  mainWindow.loadFile(join(__dirname, 'src', 'index.html'))
+
+  mainWindowState.manage(mainWindow)
 
   mainWindow.on('maximize',   () => mainWindow.webContents.send('win-maximized', true))
   mainWindow.on('unmaximize', () => mainWindow.webContents.send('win-maximized', false))
