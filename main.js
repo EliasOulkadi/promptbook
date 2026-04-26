@@ -1,8 +1,8 @@
-const { app, BrowserWindow, ipcMain, clipboard, shell, nativeTheme } = require('electron')
+const { app, BrowserWindow, ipcMain, clipboard, Menu, nativeTheme } = require('electron')
 const { join } = require('path')
 const store = require('./src/store')
 
-nativeTheme.themeSource = 'light'
+Menu.setApplicationMenu(null)
 
 let mainWindow
 
@@ -34,6 +34,10 @@ function createWindow() {
   ipcMain.handle('delete-prompt',  (_, i)    => store.remove(i))
   ipcMain.handle('increment-uses', (_, i)    => store.incrementUses(i))
   ipcMain.handle('copy-text',      (_, t)    => { clipboard.writeText(t); return true })
+  ipcMain.handle('set-theme',      (_, dark) => {
+    nativeTheme.themeSource = dark ? 'dark' : 'light'
+    if (mainWindow) mainWindow.setBackgroundColor(dark ? '#0F0F10' : '#F7F7F8')
+  })
 }
 
 app.whenReady().then(createWindow)

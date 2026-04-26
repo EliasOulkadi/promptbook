@@ -8,4 +8,5 @@ contextBridge.exposeInMainWorld('pb', {
   deletePrompt:  (id)      => ipcRenderer.invoke('delete-prompt', id),
   incrementUses: (id)      => ipcRenderer.invoke('increment-uses', id),
   copyText:      (text)    => ipcRenderer.invoke('copy-text', text),
+  setTheme:      (dark)    => ipcRenderer.invoke('set-theme', dark),
 })
