@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>promptbook</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root {
+  --sidebar-w: 220px;
+  --sidebar-bg: #f5f5f5;
+  --sidebar-border: #e5e5e5;
+  --main-bg: #ffffff;
+  --card-bg: #ffffff;
+  --card-border: #e8e8e8;
+  --card-hover: #fafafa;
+  --text-primary: #111111;
+  --text-secondary: #555555;
+  --text-muted: #999999;
+  --topbar-h: 52px;
+  --accent: #5e6ad2;
+  --accent-light: #eef0ff;
+  --radius: 6px;
+  --font: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --mono: "SF Mono", "Fira Code", "Cascadia Code", Consolas, monospace;
+}
+
+body { font-family: var(--font); background: var(--main-bg); color: var(--text-primary); height: 100vh; display: flex; overflow: hidden; font-size: 14px; }
+
+/* ── Sidebar ── */
+#sidebar {
+  width: var(--sidebar-w);
+  min-width: var(--sidebar-w);
+  background: var(--sidebar-bg);
+  border-right: 1px solid var(--sidebar-border);
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.sidebar-logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 16px 10px;
+  border-bottom: 1px solid var(--sidebar-border);
+  margin-bottom: 4px;
+}
+.sidebar-logo-icon {
+  width: 24px; height: 24px;
+  background: var(--text-primary);
+  border-radius: 5px;
+  display: flex; align-items: center; justify-content: center;
+  color: white; font-size: 11px; font-weight: 700; letter-spacing: -0.5px;
+  flex-shrink: 0;
+}
+.sidebar-logo-name { font-size: 13px; font-weight: 600; color: var(--text-primary); }
+
+.sidebar-section { padding: 8px 8px 4px; }
+.sidebar-section-label { font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; padding: 0 8px 6px; }
+
+.nav-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 6px 8px; border-radius: var(--radius);
+  cursor: pointer; color: var(--text-secondary);
+  font-size: 13px; font-weight: 500;
+  transition: background 0.1s, color 0.1s;
+  user-select: none;
+}
+.nav-item:hover { background: #ebebeb; color: var(--text-primary); }
+.nav-item.active { background: #e2e2e2; color: var(--text-primary); font-weight: 600; }
+.nav-item-icon { width: 16px; height: 16px; opacity: 0.6; flex-shrink: 0; }
+.nav-item.active .nav-item-icon { opacity: 1; }
+.nav-item-count { margin-left: auto; font-size: 11px; color: var(--text-muted); background: #e0e0e0; padding: 1px 6px; border-radius: 10px; font-weight: 500; }
+
+.sidebar-tags { padding: 4px 8px 8px; }
+.tag-filter {
+  display: flex; align-items: center; gap: 6px;
+  padding: 5px 8px; border-radius: var(--radius);
+  cursor: pointer; font-size: 12px; color: var(--text-secondary);
+  transition: background 0.1s;
+  user-select: none;
+}
+.tag-filter:hover { background: #ebebeb; }
+.tag-filter.active { background: #e2e2e2; color: var(--text-primary); font-weight: 600; }
+.tag-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+/* ── Main ── */
+#main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+/* ── Top bar ── */
+#topbar {
+  height: var(--topbar-h);
+  border-bottom: 1px solid var(--card-border);
+  display: flex; align-items: center; gap: 12px;
+  padding: 0 20px;
+  flex-shrink: 0;
+  background: white;
+}
+
+.topbar-breadcrumb { font-size: 13px; color: var(--text-muted); }
+.topbar-breadcrumb span { color: var(--text-primary); font-weight: 600; }
+
+.topbar-sep { color: var(--card-border); font-size: 16px; }
+
+.topbar-count { font-size: 12px; color: var(--text-muted); background: #f0f0f0; padding: 2px 8px; border-radius: 10px; font-weight: 500; }
+
+.topbar-right { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+
+#search-input {
+  height: 30px; padding: 0 10px 0 32px;
+  border: 1px solid var(--card-border); border-radius: var(--radius);
+  font-size: 13px; font-family: var(--font);
+  background: #f8f8f8; color: var(--text-primary);
+  outline: none; width: 200px;
+  transition: border-color 0.15s, width 0.2s;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.35-4.35'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: 10px center;
+}
+#search-input:focus { border-color: var(--accent); width: 260px; background-color: white; }
+#search-input::placeholder { color: var(--text-muted); }
+
+.btn {
+  height: 30px; padding: 0 14px;
+  border-radius: var(--radius);
+  font-size: 13px; font-weight: 500; font-family: var(--font);
+  cursor: pointer; border: none; transition: background 0.1s, opacity 0.1s;
+  display: flex; align-items: center; gap: 6px;
+}
+.btn-primary { background: var(--text-primary); color: white; }
+.btn-primary:hover { background: #333; }
+.btn-ghost { background: transparent; border: 1px solid var(--card-border); color: var(--text-secondary); }
+.btn-ghost:hover { background: #f5f5f5; color: var(--text-primary); }
+
+/* ── Prompt list ── */
+#content { flex: 1; overflow-y: auto; padding: 0; }
+
+.section-header {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 20px 8px;
+  position: sticky; top: 0; background: white; z-index: 5;
+  border-bottom: 1px solid #f0f0f0;
+}
+.section-title { font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+
+.empty-state {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  height: 60vh; gap: 12px; color: var(--text-muted);
+}
+.empty-state-icon { font-size: 40px; opacity: 0.3; }
+.empty-state h3 { font-size: 15px; font-weight: 600; color: var(--text-secondary); }
+.empty-state p { font-size: 13px; max-width: 280px; text-align: center; line-height: 1.5; }
+
+/* ── Card ── */
+.card {
+  display: flex; align-items: flex-start; gap: 14px;
+  padding: 13px 20px;
+  border-bottom: 1px solid #f3f3f3;
+  cursor: pointer;
+  transition: background 0.1s;
+  position: relative;
+}
+.card:hover { background: #fafafa; }
+.card:hover .card-actions { opacity: 1; }
+
+.card-short-id { font-size: 11px; color: var(--text-muted); font-family: var(--mono); min-width: 52px; padding-top: 1px; flex-shrink: 0; }
+
+.card-body { flex: 1; min-width: 0; }
+.card-title { font-size: 14px; font-weight: 500; color: var(--text-primary); margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.card-preview { font-size: 12px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.5; margin-bottom: 6px; }
+.card-meta { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+
+.tag {
+  font-size: 11px; font-weight: 500; padding: 2px 7px; border-radius: 4px;
+  border: 1px solid transparent;
+}
+
+.card-uses { font-size: 11px; color: var(--text-muted); margin-left: auto; display: flex; align-items: center; gap: 3px; flex-shrink: 0; padding-top: 1px; }
+
+.card-actions {
+  display: flex; align-items: center; gap: 4px;
+  opacity: 0; transition: opacity 0.1s;
+  flex-shrink: 0;
+}
+.card-btn {
+  height: 26px; padding: 0 10px;
+  border-radius: 5px; font-size: 12px; font-weight: 500; font-family: var(--font);
+  cursor: pointer; border: 1px solid var(--card-border);
+  background: white; color: var(--text-secondary);
+  transition: all 0.1s;
+  display: flex; align-items: center; gap: 4px;
+}
+.card-btn:hover { background: #f0f0f0; color: var(--text-primary); border-color: #ccc; }
+.card-btn.copied { background: #f0fff4; color: #22863a; border-color: #b7e7c3; }
+.card-btn.pin-active { color: #f59e0b; border-color: #fcd34d; background: #fffbeb; }
+
+.card-pin { position: absolute; top: 13px; left: 6px; font-size: 10px; opacity: 0.5; }
+
+/* ── Modal ── */
+.modal-backdrop {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.3);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 100; opacity: 0; transition: opacity 0.15s;
+  pointer-events: none;
+}
+.modal-backdrop.open { opacity: 1; pointer-events: all; }
+
+.modal {
+  background: white; border-radius: 10px;
+  width: 540px; max-width: 95vw;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.15), 0 0 0 1px rgba(0,0,0,0.08);
+  transform: translateY(8px); transition: transform 0.15s;
+  overflow: hidden;
+}
+.modal-backdrop.open .modal { transform: translateY(0); }
+
+.modal-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 20px 14px; border-bottom: 1px solid var(--card-border);
+}
+.modal-title { font-size: 15px; font-weight: 600; }
+.modal-close { width: 26px; height: 26px; border-radius: 5px; border: none; background: transparent; cursor: pointer; font-size: 16px; color: var(--text-muted); display: flex; align-items: center; justify-content: center; transition: background 0.1s; }
+.modal-close:hover { background: #f0f0f0; color: var(--text-primary); }
+
+.modal-body { padding: 18px 20px; display: flex; flex-direction: column; gap: 14px; }
+
+.field label { display: block; font-size: 12px; font-weight: 600; color: var(--text-secondary); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.04em; }
+.field input, .field textarea {
+  width: 100%; padding: 8px 10px;
+  border: 1px solid var(--card-border); border-radius: var(--radius);
+  font-size: 13px; font-family: var(--font);
+  color: var(--text-primary); background: white; outline: none;
+  transition: border-color 0.15s;
+  resize: none;
+}
+.field input:focus, .field textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-light); }
+.field textarea { height: 160px; line-height: 1.6; font-family: var(--mono); font-size: 12.5px; }
+.field input::placeholder, .field textarea::placeholder { color: #c0c0c0; }
+
+.modal-footer { display: flex; justify-content: flex-end; gap: 8px; padding: 14px 20px 16px; border-top: 1px solid var(--card-border); }
+
+/* ── Detail drawer ── */
+#drawer {
+  position: fixed; right: 0; top: 0; bottom: 0;
+  width: 480px; background: white;
+  border-left: 1px solid var(--card-border);
+  box-shadow: -8px 0 30px rgba(0,0,0,0.06);
+  transform: translateX(100%); transition: transform 0.2s;
+  z-index: 50; display: flex; flex-direction: column;
+  overflow: hidden;
+}
+#drawer.open { transform: translateX(0); }
+
+.drawer-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; border-bottom: 1px solid var(--card-border); flex-shrink: 0; }
+.drawer-id { font-size: 12px; color: var(--text-muted); font-family: var(--mono); }
+.drawer-header-actions { display: flex; gap: 6px; }
+
+.drawer-body { flex: 1; overflow-y: auto; padding: 20px; }
+.drawer-title { font-size: 18px; font-weight: 600; margin-bottom: 8px; line-height: 1.3; }
+.drawer-tags { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 16px; }
+
+.drawer-section-label { font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; }
+.drawer-prompt {
+  background: #f8f8f8; border: 1px solid var(--card-border); border-radius: 7px;
+  padding: 14px 16px; font-family: var(--mono); font-size: 13px;
+  line-height: 1.7; color: var(--text-primary); white-space: pre-wrap; word-break: break-word;
+  margin-bottom: 16px;
+}
+.drawer-meta { display: flex; flex-direction: column; gap: 6px; }
+.drawer-meta-row { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text-muted); }
+.drawer-meta-row strong { color: var(--text-secondary); min-width: 70px; }
+
+.drawer-footer { padding: 14px 20px; border-top: 1px solid var(--card-border); display: flex; gap: 8px; flex-shrink: 0; }
+.btn-copy-large {
+  flex: 1; height: 36px; background: var(--text-primary); color: white;
+  border: none; border-radius: var(--radius); font-size: 13px; font-weight: 600;
+  cursor: pointer; font-family: var(--font); transition: background 0.1s;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+}
+.btn-copy-large:hover { background: #333; }
+.btn-copy-large.copied { background: #22863a; }
+
+/* ── Tag colors ── */
+.tag-0  { background: #fff0f0; border-color: #ffcdd2; color: #c62828; }
+.tag-1  { background: #fff8e1; border-color: #ffe082; color: #f57f17; }
+.tag-2  { background: #f1f8e9; border-color: #c5e1a5; color: #2e7d32; }
+.tag-3  { background: #e3f2fd; border-color: #90caf9; color: #1565c0; }
+.tag-4  { background: #f3e5f5; border-color: #ce93d8; color: #6a1b9a; }
+.tag-5  { background: #e0f2f1; border-color: #80cbc4; color: #00695c; }
+.tag-6  { background: #fce4ec; border-color: #f48fb1; color: #880e4f; }
+.tag-7  { background: #ede7f6; border-color: #b39ddb; color: #4527a0; }
+.tag-8  { background: #e8f5e9; border-color: #a5d6a7; color: #1b5e20; }
+.tag-9  { background: #e0f7fa; border-color: #80deea; color: #006064; }
+.tag-10 { background: #f9fbe7; border-color: #e6ee9c; color: #827717; }
+.tag-11 { background: #fdf6ec; border-color: #f5cba7; color: #935116; }
+
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #ddd; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #bbb; }
+
+.toast {
+  position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(10px);
+  background: var(--text-primary); color: white; padding: 8px 16px; border-radius: 20px;
+  font-size: 13px; font-weight: 500; opacity: 0; transition: all 0.2s; pointer-events: none;
+  white-space: nowrap; z-index: 200;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<nav id="sidebar">
+  <div class="sidebar-logo">
+    <div class="sidebar-logo-icon">pb</div>
+    <span class="sidebar-logo-name">promptbook</span>
+  </div>
+
+  <div class="sidebar-section">
+    <div class="nav-item active" data-view="all" onclick="setView('all',this)">
+      <svg class="nav-item-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+      All Prompts
+      <span class="nav-item-count" id="count-all">0</span>
+    </div>
+    <div class="nav-item" data-view="pinned" onclick="setView('pinned',this)">
+      <svg class="nav-item-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m12 2 3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+      Pinned
+      <span class="nav-item-count" id="count-pinned">0</span>
+    </div>
+    <div class="nav-item" data-view="recent" onclick="setView('recent',this)">
+      <svg class="nav-item-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      Recently used
+      <span class="nav-item-count" id="count-recent">0</span>
+    </div>
+  </div>
+
+  <div class="sidebar-section">
+    <div class="sidebar-section-label">Tags</div>
+    <div class="sidebar-tags" id="tag-list"></div>
+  </div>
+</nav>
+
+<!-- Main -->
+<div id="main">
+  <div id="topbar">
+    <span class="topbar-breadcrumb">promptbook &rsaquo; <span id="view-label">All Prompts</span></span>
+    <span class="topbar-count" id="topbar-count">0 prompts</span>
+    <div class="topbar-right">
+      <input id="search-input" type="search" placeholder="Search..." oninput="onSearch(this.value)">
+      <button class="btn btn-primary" onclick="openModal()">+ New Prompt</button>
+    </div>
+  </div>
+
+  <div id="content">
+    <div class="empty-state" id="empty">
+      <div class="empty-state-icon">✦</div>
+      <h3>No prompts yet</h3>
+      <p>Create your first prompt to get started. Click <strong>+ New Prompt</strong> to add one.</p>
+    </div>
+    <div id="prompt-list"></div>
+  </div>
+</div>
+
+<!-- Add/Edit Modal -->
+<div class="modal-backdrop" id="modal-backdrop" onclick="handleBackdropClick(event)">
+  <div class="modal" id="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="modal-title">New Prompt</span>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="field">
+        <label>Name</label>
+        <input id="f-name" type="text" placeholder="Give this prompt a name…" maxlength="80">
+      </div>
+      <div class="field">
+        <label>Prompt text</label>
+        <textarea id="f-text" placeholder="Paste your prompt here…"></textarea>
+      </div>
+      <div class="field">
+        <label>Tags <span style="font-weight:400;text-transform:none;font-size:11px;color:#bbb">comma separated</span></label>
+        <input id="f-tags" type="text" placeholder="gpt, coding, writing…">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="savePrompt()">Save Prompt</button>
+    </div>
+  </div>
+</div>
+
+<!-- Detail Drawer -->
+<div id="drawer">
+  <div class="drawer-header">
+    <span class="drawer-id" id="d-id"></span>
+    <div class="drawer-header-actions">
+      <button class="btn btn-ghost" style="height:28px;font-size:12px" id="d-pin-btn" onclick="togglePin()">Pin</button>
+      <button class="btn btn-ghost" style="height:28px;font-size:12px" onclick="editCurrent()">Edit</button>
+      <button class="btn btn-ghost" style="height:28px;font-size:12px;color:#e53e3e;border-color:#fed7d7" onclick="deleteCurrent()">Delete</button>
+      <button class="modal-close" onclick="closeDrawer()">✕</button>
+    </div>
+  </div>
+  <div class="drawer-body">
+    <div class="drawer-title" id="d-title"></div>
+    <div class="drawer-tags" id="d-tags"></div>
+    <div class="drawer-section-label">Prompt</div>
+    <div class="drawer-prompt" id="d-text"></div>
+    <div class="drawer-section-label">Details</div>
+    <div class="drawer-meta" id="d-meta"></div>
+  </div>
+  <div class="drawer-footer">
+    <button class="btn-copy-large" id="d-copy-btn" onclick="copyDrawer()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      Copy to clipboard
+    </button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const TAG_COLORS = 12
+let allPrompts = []
+let currentView = 'all'
+let currentTag = null
+let searchQuery = ''
+let editingId = null
+let openPromptId = null
+
+const tagColorMap = {}
+let tagColorIdx = 0
+function tagColor(tag) {
+  if (tagColorMap[tag] === undefined) {
+    tagColorMap[tag] = tagColorIdx % TAG_COLORS
+    tagColorIdx++
+  }
+  return tagColorMap[tag]
+}
+
+function tagHtml(tag) {
+  return `<span class="tag tag-${tagColor(tag)}">${escHtml(tag)}</span>`
+}
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')
+}
+
+function timeAgo(iso) {
+  const d = (Date.now() - new Date(iso)) / 1000
+  if (d < 60) return 'just now'
+  if (d < 3600) return `${Math.floor(d/60)}m ago`
+  if (d < 86400) return `${Math.floor(d/3600)}h ago`
+  if (d < 604800) return `${Math.floor(d/86400)}d ago`
+  return new Date(iso).toLocaleDateString()
+}
+
+async function load() {
+  const res = await fetch('/api/prompts')
+  allPrompts = await res.json()
+  renderSidebar()
+  renderList()
+}
+
+function getFiltered() {
+  let list = [...allPrompts]
+  if (currentView === 'pinned') list = list.filter(p => p.pinned)
+  if (currentView === 'recent') list = list.filter(p => p.uses > 0).sort((a,b) => new Date(b.updatedAt)-new Date(a.updatedAt)).slice(0,20)
+  if (currentTag) list = list.filter(p => p.tags?.includes(currentTag))
+  if (searchQuery) {
+    const q = searchQuery.toLowerCase()
+    list = list.filter(p =>
+      p.name.toLowerCase().includes(q) ||
+      p.text.toLowerCase().includes(q) ||
+      p.tags?.some(t => t.includes(q))
+    )
+  }
+  return list
+}
+
+function renderSidebar() {
+  document.getElementById('count-all').textContent = allPrompts.length
+  document.getElementById('count-pinned').textContent = allPrompts.filter(p=>p.pinned).length
+  document.getElementById('count-recent').textContent = allPrompts.filter(p=>p.uses>0).length
+
+  const tags = {}
+  for (const p of allPrompts) for (const t of (p.tags||[])) tags[t] = (tags[t]||0)+1
+  const tagEl = document.getElementById('tag-list')
+  tagEl.innerHTML = Object.keys(tags).sort().map(t => `
+    <div class="tag-filter ${currentTag===t?'active':''}" onclick="setTag('${escHtml(t)}')">
+      <span class="tag-dot" style="background:var(--tag-color-${tagColor(t)}, #ccc)"></span>
+      ${escHtml(t)}
+      <span style="margin-left:auto;font-size:11px;color:#bbb">${tags[t]}</span>
+    </div>
+  `).join('')
+}
+
+function renderList() {
+  const list = getFiltered()
+  const el = document.getElementById('prompt-list')
+  const empty = document.getElementById('empty')
+  const count = document.getElementById('topbar-count')
+
+  count.textContent = `${list.length} prompt${list.length!==1?'s':''}`
+
+  if (list.length === 0) {
+    el.innerHTML = ''
+    empty.style.display = 'flex'
+    return
+  }
+  empty.style.display = 'none'
+
+  el.innerHTML = list.map(p => `
+    <div class="card" id="card-${p.id}" onclick="openDrawer('${p.id}')">
+      ${p.pinned ? '<span class="card-pin">★</span>' : ''}
+      <span class="card-short-id">${escHtml(p.shortId||'')}</span>
+      <div class="card-body">
+        <div class="card-title">${escHtml(p.name)}</div>
+        <div class="card-preview">${escHtml(p.text.slice(0,120))}</div>
+        <div class="card-meta">
+          ${(p.tags||[]).map(tagHtml).join('')}
+        </div>
+      </div>
+      <div class="card-uses">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        ${p.uses||0}
+      </div>
+      <div class="card-actions" onclick="event.stopPropagation()">
+        <button class="card-btn" onclick="copyPrompt('${p.id}',this)">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          Copy
+        </button>
+      </div>
+    </div>
+  `).join('')
+}
+
+async function copyPrompt(id, btn) {
+  const p = allPrompts.find(x => x.id === id)
+  if (!p) return
+  await navigator.clipboard.writeText(p.text)
+  await fetch(`/api/use/${id}`, { method: 'POST' })
+  p.uses = (p.uses||0) + 1
+  if (btn) { btn.textContent = '✓ Copied'; btn.classList.add('copied') }
+  showToast('Copied to clipboard')
+  setTimeout(() => {
+    if (btn) { btn.innerHTML = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copy'; btn.classList.remove('copied') }
+    renderList()
+  }, 1500)
+}
+
+function openDrawer(id) {
+  const p = allPrompts.find(x => x.id === id)
+  if (!p) return
+  openPromptId = id
+  document.getElementById('d-id').textContent = p.shortId || ''
+  document.getElementById('d-title').textContent = p.name
+  document.getElementById('d-tags').innerHTML = (p.tags||[]).map(tagHtml).join('')
+  document.getElementById('d-text').textContent = p.text
+  const pinBtn = document.getElementById('d-pin-btn')
+  pinBtn.textContent = p.pinned ? 'Unpin' : 'Pin'
+  pinBtn.classList.toggle('pin-active', p.pinned)
+  document.getElementById('d-meta').innerHTML = `
+    <div class="drawer-meta-row"><strong>Uses</strong> ${p.uses||0} times copied</div>
+    <div class="drawer-meta-row"><strong>Created</strong> ${timeAgo(p.createdAt)}</div>
+    <div class="drawer-meta-row"><strong>Updated</strong> ${timeAgo(p.updatedAt)}</div>
+  `
+  const copyBtn = document.getElementById('d-copy-btn')
+  copyBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copy to clipboard'
+  copyBtn.classList.remove('copied')
+  document.getElementById('drawer').classList.add('open')
+}
+
+function closeDrawer() {
+  document.getElementById('drawer').classList.remove('open')
+  openPromptId = null
+}
+
+async function copyDrawer() {
+  const p = allPrompts.find(x => x.id === openPromptId)
+  if (!p) return
+  await navigator.clipboard.writeText(p.text)
+  await fetch(`/api/use/${p.id}`, { method: 'POST' })
+  p.uses = (p.uses||0) + 1
+  const btn = document.getElementById('d-copy-btn')
+  btn.innerHTML = '✓ Copied!'
+  btn.classList.add('copied')
+  showToast('Copied to clipboard')
+  renderList()
+  setTimeout(() => {
+    btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copy to clipboard'
+    btn.classList.remove('copied')
+  }, 2000)
+}
+
+async function togglePin() {
+  const p = allPrompts.find(x => x.id === openPromptId)
+  if (!p) return
+  p.pinned = !p.pinned
+  await fetch(`/api/prompts/${p.id}`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ pinned: p.pinned }) })
+  openDrawer(p.id)
+  renderSidebar()
+  renderList()
+}
+
+function editCurrent() {
+  const p = allPrompts.find(x => x.id === openPromptId)
+  if (!p) return
+  openModal(p)
+}
+
+async function deleteCurrent() {
+  if (!openPromptId) return
+  if (!confirm('Delete this prompt?')) return
+  await fetch(`/api/prompts/${openPromptId}`, { method: 'DELETE' })
+  allPrompts = allPrompts.filter(x => x.id !== openPromptId)
+  closeDrawer()
+  renderSidebar()
+  renderList()
+  showToast('Prompt deleted')
+}
+
+function setView(view, el) {
+  currentView = view
+  currentTag = null
+  document.querySelectorAll('.nav-item').forEach(e => e.classList.remove('active'))
+  document.querySelectorAll('.tag-filter').forEach(e => e.classList.remove('active'))
+  if (el) el.classList.add('active')
+  const labels = { all: 'All Prompts', pinned: 'Pinned', recent: 'Recently used' }
+  document.getElementById('view-label').textContent = labels[view] || view
+  renderList()
+}
+
+function setTag(tag) {
+  if (currentTag === tag) { currentTag = null; setView('all', document.querySelector('[data-view=all]')); return }
+  currentTag = tag
+  currentView = 'all'
+  document.querySelectorAll('.nav-item').forEach(e => e.classList.remove('active'))
+  document.querySelectorAll('.tag-filter').forEach(e => e.classList.toggle('active', e.textContent.trim().startsWith(tag)))
+  document.getElementById('view-label').textContent = `#${tag}`
+  renderList()
+}
+
+function onSearch(val) {
+  searchQuery = val.trim()
+  renderList()
+}
+
+function openModal(prompt = null) {
+  editingId = prompt?.id || null
+  document.getElementById('modal-title').textContent = prompt ? 'Edit Prompt' : 'New Prompt'
+  document.getElementById('f-name').value = prompt?.name || ''
+  document.getElementById('f-text').value = prompt?.text || ''
+  document.getElementById('f-tags').value = (prompt?.tags||[]).join(', ')
+  document.getElementById('modal-backdrop').classList.add('open')
+  setTimeout(() => document.getElementById('f-name').focus(), 50)
+}
+
+function closeModal() {
+  document.getElementById('modal-backdrop').classList.remove('open')
+  editingId = null
+}
+
+function handleBackdropClick(e) {
+  if (e.target === document.getElementById('modal-backdrop')) closeModal()
+}
+
+async function savePrompt() {
+  const name = document.getElementById('f-name').value.trim()
+  const text = document.getElementById('f-text').value.trim()
+  const tags = document.getElementById('f-tags').value.split(',').map(t=>t.trim()).filter(Boolean)
+
+  if (!text) { document.getElementById('f-text').focus(); return }
+
+  if (editingId) {
+    const res = await fetch(`/api/prompts/${editingId}`, {
+      method: 'PUT', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ name: name || 'Untitled', text, tags })
+    })
+    const updated = await res.json()
+    const idx = allPrompts.findIndex(p => p.id === editingId)
+    if (idx !== -1) allPrompts[idx] = updated
+    if (openPromptId === editingId) openDrawer(editingId)
+  } else {
+    const res = await fetch('/api/prompts', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ name: name || 'Untitled', text, tags })
+    })
+    const created = await res.json()
+    allPrompts.unshift(created)
+  }
+
+  closeModal()
+  renderSidebar()
+  renderList()
+  showToast(editingId ? 'Prompt updated' : 'Prompt saved')
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast')
+  t.textContent = msg
+  t.classList.add('show')
+  setTimeout(() => t.classList.remove('show'), 2200)
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    if (document.getElementById('modal-backdrop').classList.contains('open')) closeModal()
+    else closeDrawer()
+  }
+  if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+    e.preventDefault()
+    document.getElementById('search-input').focus()
+  }
+  if ((e.metaKey || e.ctrlKey) && e.key === 'n') {
+    e.preventDefault()
+    openModal()
+  }
+})
+
+load()
+</script>
+</body>
+</html>

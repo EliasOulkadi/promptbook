@@ -1,0 +1,33 @@
+{
+  "name": "promptbook",
+  "version": "1.0.0",
+  "description": "Local AI prompt manager — save, search, and copy your prompts from a clean web UI",
+  "type": "module",
+  "bin": {
+    "promptbook": "./bin/promptbook.mjs",
+    "pb": "./bin/promptbook.mjs"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": [
+    "ai",
+    "prompts",
+    "cli",
+    "productivity",
+    "chatgpt",
+    "llm",
+    "prompt-manager",
+    "local"
+  ],
+  "author": "Elias Oulkadi",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/EliasOulkadi/promptbook.git"
+  },
+  "homepage": "https://github.com/EliasOulkadi/promptbook",
+  "bugs": {
+    "url": "https://github.com/EliasOulkadi/promptbook/issues"
+  }
+}
