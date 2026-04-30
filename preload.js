@@ -14,4 +14,5 @@ contextBridge.exposeInMainWorld('pb', {
   maximize:      ()        => ipcRenderer.invoke('win-maximize'),
   close:         ()        => ipcRenderer.invoke('win-close'),
   onMaximize:    (cb)      => ipcRenderer.on('win-maximized', (_, v) => cb(v)),
+  startAuth:     (url)     => ipcRenderer.invoke('start-auth', url),
 })

@@ -4,22 +4,36 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Promptbook</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 
 <nav id="sidebar">
   <div class="sb-top">
-    <span class="sb-wordmark">Promptbook</span>
+    <div class="sb-brand">
+      <div class="sb-logo">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <polyline points="14 2 14 8 20 8"/>
+          <line x1="16" y1="13" x2="8" y2="13"/>
+          <line x1="16" y1="17" x2="8" y2="17"/>
+        </svg>
+      </div>
+      <span class="sb-wordmark">Promptbook</span>
+    </div>
   </div>
 
-  <div class="sb-search" onclick="document.getElementById('srch').focus()">
+  <div class="sb-search" onclick="focusSearch()">
     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
     Search
-    <span style="margin-left:auto;font-size:11px">Ctrl+K</span>
+    <kbd>Ctrl+K</kbd>
   </div>
 
-  <div class="sb-section">
+  <div class="sb-nav">
+    <div class="sb-lbl">Library</div>
     <div class="nav-item on" data-v="all" onclick="setView('all',this)">
       <svg class="nav-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
       All prompts
@@ -35,6 +49,8 @@
       Recently used
       <span class="nav-n" id="n-rec">0</span>
     </div>
+
+    <div class="sb-lbl" style="margin-top:4px">Discover</div>
     <div class="nav-item" data-v="community" onclick="setView('community',this)">
       <svg class="nav-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
       Community
@@ -45,23 +61,70 @@
   <div class="sb-lbl">Tags</div>
   <div class="sb-tags" id="tag-list"></div>
 
-  <div class="sb-foot" style="display:flex; justify-content:space-between; align-items:center;">
-    <span id="foot-count">0 prompts</span>
-    <button class="btn btn-ghost" id="login-btn" onclick="window.api.login()" style="font-size:11px; height:24px; padding:0 8px;">Login</button>
+  <div class="sb-foot">
+    <div class="sb-foot-row">
+      <span id="foot-count">0 prompts</span>
+      <div class="sb-foot-actions">
+        <button class="icon-btn" id="theme-btn" onclick="toggleTheme()" title="Toggle theme">
+          <svg id="theme-ic-moon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+          <svg id="theme-ic-sun" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+        </button>
+        <button class="icon-btn" onclick="importPrompts()" title="Import JSON">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        </button>
+        <button class="icon-btn" onclick="exportPrompts()" title="Export JSON">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        </button>
+      </div>
+    </div>
+    <button class="login-btn" id="login-btn" onclick="window.api.login()">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      <span id="login-label">Login with Google</span>
+    </button>
   </div>
 </nav>
 
 <div id="main">
   <div id="topbar">
+    <div class="tb-breadcrumb" id="tb-breadcrumb">
+      <button class="tb-bc-link" onclick="hideProfile()">Community</button>
+      <span class="tb-bc-sep">›</span>
+      <span class="tb-bc-cur" id="tb-profile-name"></span>
+    </div>
     <span class="tb-title" id="view-lbl">All prompts</span>
     <span class="tb-count" id="tb-count">0</span>
+
+    <div class="tb-controls" id="tb-controls">
+      <div class="view-toggle">
+        <button class="vt-btn" id="vt-list" onclick="setDisplayMode('list')" title="List view">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+        </button>
+        <button class="vt-btn active" id="vt-grid" onclick="setDisplayMode('grid')" title="Grid view">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        </button>
+      </div>
+      <div class="sort-wrap" id="sort-wrap">
+        <button class="sort-btn" id="sort-btn" onclick="toggleSort(event)">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="3" y1="6" x2="21" y2="6"/><line x1="6" y1="12" x2="18" y2="12"/><line x1="9" y1="18" x2="15" y2="18"/></svg>
+          <span id="sort-label">Newest</span>
+        </button>
+        <div class="sort-menu" id="sort-menu">
+          <div class="sort-opt active" data-sort="newest" onclick="setSortBy('newest')">Newest first</div>
+          <div class="sort-opt" data-sort="oldest" onclick="setSortBy('oldest')">Oldest first</div>
+          <div class="sort-opt" data-sort="uses" onclick="setSortBy('uses')">Most used</div>
+          <div class="sort-opt" data-sort="alpha" onclick="setSortBy('alpha')">A – Z</div>
+        </div>
+      </div>
+    </div>
+
     <div class="tb-right">
-      <input id="srch" type="search" placeholder="Search…" oninput="onSearch(this.value)">
+      <input id="srch" type="search" placeholder="Search prompts…" oninput="onSearch(this.value)">
       <button class="btn btn-solid" onclick="openModal()">
-        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M12 5v14M5 12h14"/></svg>
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M12 5v14M5 12h14"/></svg>
         New prompt
       </button>
     </div>
+
     <div id="wc">
       <button class="wc-btn" id="wc-min" onclick="window.pb.minimize()">
         <svg width="10" height="1" viewBox="0 0 10 1"><rect width="10" height="1.5" fill="currentColor"/></svg>
@@ -77,34 +140,61 @@
 
   <div id="content">
     <div id="empty" style="display:none">
+      <div class="empty-icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+      </div>
       <h3>No prompts yet</h3>
-      <p>Save prompts you use often and copy them instantly when you need them.</p>
-      <button class="btn btn-solid" style="margin-top:6px" onclick="openModal()">
-        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M12 5v14M5 12h14"/></svg>
-        New prompt
-      </button>
+      <p>Save the prompts you use every day and copy them in one click.</p>
+      <div class="empty-actions">
+        <button class="btn btn-solid" onclick="openModal()">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M12 5v14M5 12h14"/></svg>
+          New prompt
+        </button>
+        <button class="btn btn-ghost" onclick="importPrompts()">Import</button>
+      </div>
     </div>
-    <div id="no-results" style="display:none"><p>No results.</p></div>
+
+    <div id="no-results" style="display:none">
+      <p>No prompts match <strong>"<span id="nr-q"></span>"</strong></p>
+    </div>
 
     <div id="list-wrap" style="display:none">
       <div class="list-head">
-        <div class="lh-id">ID</div>
         <div class="lh-name">Name</div>
         <div class="lh-tags">Tags</div>
         <div class="lh-uses">Uses</div>
       </div>
       <div id="list"></div>
     </div>
+
+    <div id="grid-wrap" style="display:none">
+      <div id="grid"></div>
+    </div>
+
+    <div id="profile-view" style="display:none">
+      <div class="profile-header">
+        <div class="profile-avatar-wrap">
+          <img class="profile-avatar" id="pv-avatar" src="" alt="" style="display:none">
+          <div class="profile-avatar-init" id="pv-init" style="display:none"></div>
+        </div>
+        <div class="profile-info">
+          <div class="profile-name" id="pv-name">User</div>
+          <div class="profile-sub" id="pv-sub">0 public prompts</div>
+        </div>
+      </div>
+      <div id="profile-grid"></div>
+    </div>
   </div>
 </div>
 
+<div id="drawer-overlay" onclick="closeDrawer()"></div>
 <div id="drawer">
   <div class="dr-top">
     <span class="dr-id" id="d-id"></span>
     <div class="dr-acts">
       <button class="d-btn" id="d-pin" onclick="togglePin()">Pin</button>
-      <button class="d-btn" onclick="editCurrent()">Edit</button>
-      <button class="d-btn del" onclick="delCurrent()">Delete</button>
+      <button class="d-btn" id="d-edit" onclick="editCurrent()">Edit</button>
+      <button class="d-btn del" id="d-del" onclick="delCurrent()">Delete</button>
       <button class="d-btn d-icon" onclick="closeDrawer()">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
       </button>
@@ -112,7 +202,14 @@
   </div>
   <div class="dr-body">
     <div class="dr-title" id="d-title"></div>
+    <div class="dr-description" id="d-description" style="display:none;"></div>
     <div class="dr-tags" id="d-tags"></div>
+    <div class="dr-author" id="d-author">
+      <img class="dr-author-avatar" id="d-avatar" src="" alt="" style="display:none">
+      <div class="dr-author-init" id="d-author-init" style="display:none"></div>
+      <span class="dr-author-name" id="d-author-name"></span>
+      <button class="dr-author-link" id="d-author-link">View profile →</button>
+    </div>
     <div class="dr-lbl">Prompt</div>
     <div class="dr-text" id="d-text"></div>
     <div class="dr-lbl">Details</div>
@@ -123,19 +220,30 @@
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
       Copy to clipboard
     </button>
+    <button class="save-btn" id="d-save" style="display:none" onclick="saveFromCommunity()">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13"/><polyline points="7 3 7 8 15 8"/></svg>
+      Save to my library
+    </button>
   </div>
 </div>
 
+<!-- CREATE / EDIT MODAL -->
 <div class="backdrop" id="backdrop" onclick="bgClose(event)">
   <div class="modal">
     <div class="m-head">
       <span class="m-ttl" id="m-ttl">New prompt</span>
-      <button class="m-x" onclick="closeModal()">✕</button>
+      <button class="m-x" onclick="closeModal()">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
     </div>
     <div class="m-body">
       <div class="field">
         <label>Name</label>
         <input id="f-name" type="text" placeholder="Give it a short name" maxlength="80">
+      </div>
+      <div class="field">
+        <label>Description</label>
+        <input id="f-description" type="text" placeholder="What does this prompt do? (optional)" maxlength="200">
       </div>
       <div class="field">
         <label>Prompt</label>
@@ -146,21 +254,41 @@
         <label>Tags <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text-3)">— comma separated</span></label>
         <input id="f-tags" type="text" placeholder="code, writing, work…">
       </div>
-      <div class="field" style="display:flex; align-items:center; gap:8px; margin-top:4px;">
-        <input type="checkbox" id="f-public" style="width:16px; height:16px;">
-        <label for="f-public" style="margin:0; text-transform:none; font-size:13px; color:var(--text-2);">Make this prompt public (Community)</label>
+      <div class="public-row" id="public-row">
+        <input type="checkbox" id="f-public">
+        <label for="f-public">Share this prompt with the community</label>
       </div>
     </div>
     <div class="m-foot">
       <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
-      <button class="btn btn-solid" onclick="savePrompt()">Save</button>
+      <button class="btn btn-solid" onclick="savePrompt()">Save prompt</button>
+    </div>
+  </div>
+</div>
+
+<!-- CONFIRM DIALOG -->
+<div class="backdrop" id="confirm-backdrop" onclick="confirmBgClose(event)">
+  <div class="modal confirm-modal">
+    <div class="m-head">
+      <span class="m-ttl" id="confirm-title">Delete prompt?</span>
+      <button class="m-x" onclick="confirmCancel()">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="m-body">
+      <p id="confirm-msg">This action cannot be undone.</p>
+    </div>
+    <div class="m-foot">
+      <button class="btn btn-ghost" onclick="confirmCancel()">Cancel</button>
+      <button class="btn btn-danger" id="confirm-ok">Delete</button>
     </div>
   </div>
 </div>
 
 <div class="toast" id="toast"></div>
 
-<!-- Supabase CDN -->
+<input type="file" id="import-file" accept=".json" style="display:none" onchange="handleImport(event)">
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="api.js"></script>
 <script src="app.js"></script>

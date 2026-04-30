@@ -3,3 +3,6 @@ dist/
 out/
 .cache/
 *.log
+.env
+.env.local
+.env.*.local

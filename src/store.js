@@ -8,7 +8,8 @@ const DATA_DIR  = join(homedir(), '.promptbook')
 const DATA_FILE = join(DATA_DIR, 'prompts.json')
 
 let memoryCache = null
-let writePromise = null
+let writeLock = false
+let writeQueued = false
 
 const TAG_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
 function shortId() {
@@ -30,29 +31,34 @@ function loadSync() {
   }
   try {
     memoryCache = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'))
+    if (!memoryCache || !Array.isArray(memoryCache.prompts)) {
+      memoryCache = { prompts: [] }
+    }
   } catch {
     memoryCache = { prompts: [] }
   }
   return memoryCache
 }
 
-// Ensure loaded at startup
 loadSync()
 
 async function writeAsync() {
   ensureDirSync()
-  const dataString = JSON.stringify(memoryCache, null, 2)
-  
-  // Basic debounce / lock for writes
-  if (writePromise) {
-    await writePromise
+  if (writeLock) {
+    writeQueued = true
+    return
   }
-  
-  writePromise = fsPromises.writeFile(DATA_FILE, dataString, 'utf8').finally(() => {
-    writePromise = null
-  })
-  
-  await writePromise
+  writeLock = true
+  writeQueued = false
+  try {
+    await fsPromises.writeFile(DATA_FILE, JSON.stringify(memoryCache, null, 2), 'utf8')
+  } finally {
+    writeLock = false
+    if (writeQueued) {
+      writeQueued = false
+      writeAsync().catch(console.error)
+    }
+  }
 }
 
 async function getAll() {
@@ -67,10 +73,10 @@ async function create({ name, text, tags = [], pinned = false }) {
   const prompt = {
     id: randomUUID(),
     shortId: shortId(),
-    name: name?.trim() || 'Untitled',
-    text: text?.trim() || '',
-    tags: [...new Set(tags.map(t => t.toLowerCase().trim()).filter(Boolean))],
-    pinned,
+    name: (name || '').trim() || 'Untitled',
+    text: (text || '').trim(),
+    tags: [...new Set((tags || []).map(t => t.toLowerCase().trim()).filter(Boolean))],
+    pinned: !!pinned,
     uses: 0,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
@@ -83,8 +89,15 @@ async function create({ name, text, tags = [], pinned = false }) {
 async function update(id, fields) {
   const idx = memoryCache.prompts.findIndex(p => p.id === id)
   if (idx === -1) return null
-  if (fields.tags) fields.tags = [...new Set(fields.tags.map(t => t.toLowerCase().trim()).filter(Boolean))]
-  memoryCache.prompts[idx] = { ...memoryCache.prompts[idx], ...fields, id, updatedAt: new Date().toISOString() }
+  if (fields.tags) {
+    fields.tags = [...new Set(fields.tags.map(t => t.toLowerCase().trim()).filter(Boolean))]
+  }
+  memoryCache.prompts[idx] = {
+    ...memoryCache.prompts[idx],
+    ...fields,
+    id,
+    updatedAt: new Date().toISOString(),
+  }
   await writeAsync()
   return memoryCache.prompts[idx]
 }
